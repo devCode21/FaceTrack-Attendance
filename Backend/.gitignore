@@ -1,0 +1,44 @@
+# Videos
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.flv
+*.wmv
+
+# Images
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.webp
+*.bmp
+*.svg
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+pytest_cache/
+
+# Specific init file you mentioned
+__init__.py
+
+# Logs and text outputs
+*.log
+log.txt
+
+# Generated results / temp
+results/
+output/
+temp/
+*.tmp
+
+# OS files
+.DS_Store
+Thumbs.db
+
+venv/
+Backend/venv/
