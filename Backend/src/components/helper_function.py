@@ -1,6 +1,8 @@
-from utils.log import setup_logger
+from src.utils.log import setup_logger
+from retinaface import RetinaFace
 logger = setup_logger()
-from bson.objectid import ObjectId  # For MongoDB queries
+from src.components.header import  ObjectId
+ # For MongoDB queries
 def get_embeddings_from_database(course_id , Course_Collection, Embeddings_Collection  ):
     logger.info(f"Searching for course ID: {course_id}")
     try:
@@ -18,6 +20,7 @@ def get_embeddings_from_database(course_id , Course_Collection, Embeddings_Colle
     
     # Assuming 'class_name' in 'Course_info' stores the 'id' for 'Class_Embeddings'
     class_id = course.get('class_name') 
+    usn_mapping = course.get('usn_mapping')
     if not class_id:
         logger.error(f"Course {course_id} has no 'class_name' field to link to embeddings.")
         raise ValueError("Course has no embedding link")
@@ -32,13 +35,11 @@ def get_embeddings_from_database(course_id , Course_Collection, Embeddings_Colle
     Embeddings = embeddings_doc['embeddings']
     # ASSUMED SCHEMA: Embeddings = {'usn1': [ [emb1_list], [emb2_list] ], 'usn2': [ [emb3_list] ]}
     logger.info(f"Found embeddings for {len(Embeddings)} students")
-    return Embeddings
+    return Embeddings , usn_mapping
 
 
 # get the frames from the video and detect faces using YOLO model
 def detect_faces_from_frame(frame ,Yolo):
-    # This function is fast, so logging every call is too noisy.
-    # logger.debug("Processing frame for face detection")
     model = Yolo
     results = model(frame, verbose=False) # verbose=False to silent YOLO logs
     faces = []
@@ -46,13 +47,8 @@ def detect_faces_from_frame(frame ,Yolo):
     for result in results:
         for box in result.boxes:
             x1, y1, x2, y2 = map(int, box.xyxy[0])
-            # Add a small check for valid crop
-            if y2 > y1 and x2 > x1:
-                face_crop = frame[y1:y2, x1:x2]
-                faces.append(face_crop)
-                # logger.debug(f"Detected face at coordinates: ({x1}, {y1}, {x2}, {y2})")
-
-    # logger.debug(f"Total faces detected in frame: {len(faces)}")
+            face_crop = frame[y1:y2, x1:x2]
+            faces.append(face_crop)
     return faces
 
 
@@ -68,3 +64,25 @@ def increase_resolution(face_image):
     except Exception as e:
         logger.error(f"Failed to upscale image with shape {face_image.shape}: {e}")
         return None # Return None on failure
+
+
+
+
+
+def retina_face_detect(frame):
+    if frame is None:
+        logger.error("Input frame is None")
+        return []
+    try:
+        detections = RetinaFace.detect_faces(frame)
+        faces = []
+        if isinstance(detections, dict):
+            for key in detections:
+                face_info = detections[key]
+                x1, y1, x2, y2 = map(int, face_info['facial_area'])
+                face_crop = frame[y1:y2, x1:x2]
+                faces.append(face_crop)
+        return faces
+    except Exception as e:
+        logger.error(f"RetinaFace detection failed: {e}")
+        return []

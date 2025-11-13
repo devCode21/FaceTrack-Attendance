@@ -2,8 +2,12 @@
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 from urllib.parse import quote_plus
+from  dotenv import load_dotenv
+import os
 
-password=quote_plus('Kadak21@')
+load_dotenv()
+
+password=quote_plus(os.getenv("password"))
 
 uri = f"mongodb+srv://gwkadak:{password}@cluster0.h93js.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
 
@@ -18,11 +22,16 @@ except Exception as e:
     print(e)
 
 
+DB =client['Database']
+
+
 database =client['Database']
 collection =database['Students_embeddings']
 
-a=collection.insert_one({'a':1})
-print(a.inserted_id)
+Class_Embeddings=DB['Class_Embeddings']
+Course_info =DB['Course_info']
+usn_Collection =DB['USN_TO_NAME']
+
 
 
 
