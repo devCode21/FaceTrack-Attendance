@@ -57,7 +57,7 @@ except Exception as e:
      
 
 def compare_with_embeddings(features_tensor, class_embeddings, device):
-    similarity_threshold = 0.80  # Adjust as needed
+    similarity_threshold = 0.75  # Adjust as needed
     similarity = torch.nn.CosineSimilarity(dim=1)
     features_tensor = features_tensor / features_tensor.norm(dim=1, keepdim=True)
     for usn, list_of_embedding_lists in class_embeddings.items():
@@ -95,7 +95,7 @@ def process_video(video_path, course_id, frame_count_device , device="cpu"):
     Marked_Students = []
     
     logger.info("Getting class embeddings from database...")
-    CLass_Embeddings , usn_mapping= get_embeddings_from_database(course_id , Course_Collection, Embeddings_Collection)
+    CLass_Embeddings = get_embeddings_from_database(course_id , Course_Collection, Embeddings_Collection)
     logger.info(f"Retrieved embeddings for {len(CLass_Embeddings)} students.")
     video = cv2.VideoCapture(video_path)
 
@@ -114,10 +114,11 @@ def process_video(video_path, course_id, frame_count_device , device="cpu"):
                 break   
            
             
-           
+            frame_count += 1
             if frame_count % frame_count_device != 0: # Process 1 frame every 30 (adjust as needed)
                 continue
-            frame_count += 1
+
+            
             
             faces = detect_faces_from_frame(frame ,Yolo)
             logger.debug(f"Found {len(faces)} faces in frame {frame_count}")

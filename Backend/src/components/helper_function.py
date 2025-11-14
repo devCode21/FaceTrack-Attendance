@@ -20,13 +20,14 @@ def get_embeddings_from_database(course_id , Course_Collection, Embeddings_Colle
     
     # Assuming 'class_name' in 'Course_info' stores the 'id' for 'Class_Embeddings'
     class_id = course.get('class_name') 
-    usn_mapping = course.get('usn_mapping')
+   
     if not class_id:
         logger.error(f"Course {course_id} has no 'class_name' field to link to embeddings.")
         raise ValueError("Course has no embedding link")
         
     logger.info(f"Looking for embeddings with class ID: {class_id}")
-    embeddings_doc = Embeddings_Collection.find_one({'_id': class_id})
+    embeddings_doc = Embeddings_Collection.find_one({'_id': ObjectId(class_id)})
+    
     
     if not embeddings_doc or 'embeddings' not in embeddings_doc:
         logger.error(f"No embeddings document found for class ID: {class_id}")
@@ -35,7 +36,7 @@ def get_embeddings_from_database(course_id , Course_Collection, Embeddings_Colle
     Embeddings = embeddings_doc['embeddings']
     # ASSUMED SCHEMA: Embeddings = {'usn1': [ [emb1_list], [emb2_list] ], 'usn2': [ [emb3_list] ]}
     logger.info(f"Found embeddings for {len(Embeddings)} students")
-    return Embeddings , usn_mapping
+    return Embeddings
 
 
 # get the frames from the video and detect faces using YOLO model
@@ -53,6 +54,7 @@ def detect_faces_from_frame(frame ,Yolo):
 
 
 
+# not used currently but can be useful for enhancing face images
 def increase_resolution(face_image):
     """Upscales a face image using the pre-loaded EDSR model."""
     # logger.debug("Upscaling face image...")

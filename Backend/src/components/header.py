@@ -24,11 +24,9 @@ import cv2 as cv
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 from urllib.parse import quote_plus
-
-
 from src.components.helper_function import get_embeddings_from_database , detect_faces_from_frame 
 
 
 
-Yolo_Model_path = r'C:\Users\KADAK SINGH\OneDrive\Desktop\VTMA-1\Backend\yolov11m-face.pt'
-EDSR_Model_path = r"C:\Users\KADAK SINGH\OneDrive\Desktop\VTMA-1\Backend\EDSR_x2.pb"    
+Yolo_Model_path = r'uploads\yolov12n-face.pt'
+EDSR_Model_path = r"uploads\EDSR_x2.pb"    

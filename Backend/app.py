@@ -7,6 +7,7 @@ from fastapi import UploadFile, File , Form
 import torch
 import json
 import os
+import pandas as pd
 
 
 app = FastAPI()
@@ -71,6 +72,10 @@ async def attendance_data(course_id: str, file: UploadFile = File(...)):
     getting_results = GettingResults(file_path, course_id, device_to_use)
     results = getting_results.get_results()
     os.remove(file_path)
+    df = pd.DataFrame()
+    df['Names']=[k.keys() for k in results]
+    df['Accuracy']= [k.values() for k in results]
+    df.to_csv(f'uploads/attendance_{course_id}.csv', index=False)
 
     return {"filename": file.filename, "content_type": file.content_type, "results": results    }
 
@@ -88,10 +93,12 @@ def get_attendance_from_image(course_id: str, file: UploadFile = File(...)):
     getting_results = GettingResults_for_image(image_path, course_id, device_to_use)
     results = getting_results.get_results()
     os.remove(file_path)
-    return results
+    df = pd.DataFrame()
+    df['Names']=results.keys()
+    df['Accuracy']=results.values()
+    df.to_csv(f'uploads/attendance_{course_id}.csv', index=False)
+    return {"filename": file.filename, "content_type": file.content_type, "results": results}
 
 
 
 
-
-   
