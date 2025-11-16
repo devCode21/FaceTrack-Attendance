@@ -15,7 +15,7 @@ if __name__ == "__main__":
     try:
         # --- UPDATE THESE VALUES ---
         video = r"C:\Users\KADAK SINGH\OneDrive\Desktop\VTMA-1\Backend\20251016_140704.mp4"
-        course_id = "69174e704b2e968c865b1105" # Example Course ID
+        course_id = "691a02629b0ce30e3e5d054c" # Example Course ID
         
         # Check if image file exists
         if not os.path.exists(video):

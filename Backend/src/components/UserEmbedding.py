@@ -1,19 +1,27 @@
 
+import cv2
 
-from src.components.header import os, Path, Image, torch , MTCNN, InceptionResnetV1
+from src.components.header import os, Path, Image, torch , MTCNN, InceptionResnetV1  , EDSR_Model_path
+from src.components.helper_function import increase_resolution
 from src.DataBase.pymong import DB , Course_info , Class_Embeddings
 import numpy as np
-mtcnn = MTCNN(image_size=224, margin=0)
+mtcnn = MTCNN(image_size=224, margin=40)
 resnet = InceptionResnetV1(pretrained='vggface2' , classify=False).eval()
+
+
+sr = cv2.dnn_superres.DnnSuperResImpl_create()
+sr.readModel(EDSR_Model_path)
+sr.setModel("edsr", 2)
  
 def get_info_from_image(image_path):
     image_path = str(image_path)
     filename = Path(image_path).name
-    values = filename.split(' ')  
+    values = filename.split(" ")
     name = values[0]
-    usn = name
     img_id = str(np.random.randint(1000000))  # removes extension
-    img = Image.open(image_path)
+    
+    usn = name+img_id
+    img = Image.open(image_path).convert('RGB')
     return img, name, usn, img_id
 
 
@@ -26,22 +34,34 @@ class ExtractEmbeddings:
         self.get_info_from_image = get_info_from_image
         self.Img_path = list(Path(image_folder_path).glob("*.jpg"))
         self.DataBase = {}
-        self.usn_to_name = {}
-
+        
     def embeddings(self):
         for i in self.Img_path:
             Img, Name, USN, id = self.get_info_from_image(i)
+            w, h = Img.size
+            if w < 100 or h < 100:
+               Img =cv2.imread(str(i))
+               Img = increase_resolution(Img, sr)
+               Img = Image.fromarray(cv2.cvtColor(Img, cv2.COLOR_BGR2RGB))
             if Img is None:
                 continue
-            Img=Img.resize((224,224))
+            
             img_cropped = self.mtcnn(Img)
+            if img_cropped is None:
+                print(f"Face not detected in image: {i} {Img.size}")
+                continue
+            img_save =(img_cropped.permute(1, 2, 0).contiguous().numpy())
+
+            img_save=(img_save * 255).astype(np.uint8)
+            face_bgr = cv2.cvtColor(img_save, cv2.COLOR_RGB2BGR)
+            cv2.imwrite(f"debug_original_{id}.jpg", face_bgr)  # Debug: Save the original image
             
             if img_cropped is None:
                 print(f"Face not detected in image: {i} {Img.size}")
-
                 continue
                 # img_cropped=Img.to(torch.FloatTensor).permute(2,0,1)/255.0
                 # img_cropped.squeeze_()
+            
             
             with torch.inference_mode():
                 img_probs = self.resnet(img_cropped.unsqueeze(0))

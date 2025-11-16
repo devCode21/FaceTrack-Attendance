@@ -28,5 +28,5 @@ from src.components.helper_function import get_embeddings_from_database , detect
 
 
 
-Yolo_Model_path = r'uploads\yolov12n-face.pt'
-EDSR_Model_path = r"uploads\EDSR_x2.pb"    
+Yolo_Model_path = r'C:\Users\KADAK SINGH\OneDrive\Desktop\VTMA-1\Backend\uploads\yolov12n-face.pt'
+EDSR_Model_path = r"C:\Users\KADAK SINGH\OneDrive\Desktop\VTMA-1\Backend\uploads\EDSR_x2.pb"    

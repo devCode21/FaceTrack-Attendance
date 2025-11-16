@@ -57,9 +57,10 @@ except Exception as e:
      
 
 def compare_with_embeddings(features_tensor, class_embeddings, device):
-    similarity_threshold = 0.75  # Adjust as needed
+    similarity_threshold = 0.8 # Adjust as needed
     similarity = torch.nn.CosineSimilarity(dim=1)
     features_tensor = features_tensor / features_tensor.norm(dim=1, keepdim=True)
+    scores=[]
     for usn, list_of_embedding_lists in class_embeddings.items():
         for db_embedding_list_name , db_embedding_list in list_of_embedding_lists.items():
             try:
@@ -74,15 +75,32 @@ def compare_with_embeddings(features_tensor, class_embeddings, device):
                 embedding_tensor = embedding_tensor / embedding_tensor.norm(dim=1, keepdim=True)
                 
                 sim_score = similarity(features_tensor, embedding_tensor).item()
-                
+               
                 logger.debug(f"Comparing with USN {usn}: similarity = {sim_score:.4f}")
+                logger.info(f"Comparing with USN {usn} embedding {db_embedding_list_name}: similarity = {sim_score:.4f}")
+                scores.append((usn, sim_score))
                 
-                if sim_score > similarity_threshold:
-                    logger.info(f"Match found! USN: {usn}, Similarity: {sim_score:.4f}")
-                    return usn, sim_score
                     
             except Exception as e:
                 logger.error(f"Error comparing embedding for USN {usn}: {e}. Embedding data (type {type(db_embedding_list)}): {str(db_embedding_list)[:50]}...")
+    
+    scores=sorted(scores, key=lambda x: x[1], reverse=True)[:7]
+   
+    if scores and scores[0][1] >= similarity_threshold:
+        logger.debug(f"Match found: USN {scores[0][0]} with score {scores[0][1]:.4f}")
+        return scores[0]  # Return the USN and score of the best match
+    else:
+
+        usn_count={}
+        for usn, score in scores:
+            if usn not in usn_count:
+                usn_count[usn]=[0 ,0]
+            usn_count[usn]=[usn_count[usn][0]+1 , usn_count[usn][1]+score]
+            if usn_count[usn][0]>=3 and (usn_count[usn][1]/usn_count[usn][0])>=0.45: 
+                logger.debug(f"Match found by majority voting: USN {usn} with score {score:.4f}")
+                return usn, score
+           
+           
     
     logger.debug("No match found above threshold for this face")
     return None
@@ -131,10 +149,9 @@ def process_video(video_path, course_id, frame_count_device , device="cpu"):
                 logger.debug(f"Processing Face {i+1} in frame {frame_count}")
                 try:
                     
-
-                    high_res_face = cv2.resize(face, (224, 224))
+     
                    
-                    aligned_face = MTCNN_model(high_res_face)
+                    aligned_face = MTCNN_model(face)
                     if aligned_face is None:
                         logger.warning(f"MTCNN failed to align face {i+1} in frame {frame_count}, skipping.")
                         continue
@@ -198,7 +215,7 @@ def process_image(image_path, course_id , device="cpu"):
     Marked_Students = []
     
     logger.info("Getting class embeddings from database...")
-    CLass_Embeddings , usn_mapping= get_embeddings_from_database(course_id , Course_Collection, Embeddings_Collection)
+    CLass_Embeddings = get_embeddings_from_database(course_id , Course_Collection, Embeddings_Collection)
     logger.info(f"Retrieved embeddings for {len(CLass_Embeddings)} students.")
     image = cv2.imread(image_path)
     
@@ -219,10 +236,10 @@ def process_image(image_path, course_id , device="cpu"):
                 logger.debug(f"Processing Face {i+1} in image {image_path}")
                 try:
                     
-
-                    high_res_face = cv2.resize(face, (224, 224))
+                    cv2.imwrite(f"debug_face_{i+1}.jpg", face)  # Debug: Save the cropped face image
+                    
                    
-                    aligned_face = MTCNN_model(high_res_face)
+                    aligned_face = MTCNN_model(face)
                     if aligned_face is None:
                         logger.warning(f"MTCNN failed to align face {i+1} in image {image_path}, skipping.")
                         continue

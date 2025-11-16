@@ -1,3 +1,4 @@
+from PIL import Image
 from src.utils.log import setup_logger
 from retinaface import RetinaFace
 logger = setup_logger()
@@ -49,13 +50,13 @@ def detect_faces_from_frame(frame ,Yolo):
         for box in result.boxes:
             x1, y1, x2, y2 = map(int, box.xyxy[0])
             face_crop = frame[y1:y2, x1:x2]
-            faces.append(face_crop)
+            faces.append(Image.fromarray(face_crop))
     return faces
 
 
 
 # not used currently but can be useful for enhancing face images
-def increase_resolution(face_image):
+def increase_resolution(face_image , sr):
     """Upscales a face image using the pre-loaded EDSR model."""
     # logger.debug("Upscaling face image...")
     try:
