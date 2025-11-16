@@ -1,18 +1,5 @@
 # FaceAttendance Backend
 
-A complete backend system for **automatic face attendance** from classroom videos and images. This README captures the **entire context of our project discussions**, including:
-
-* Full architecture and pipeline
-* Why each model was chosen
-* Benchmark-style reasoning (qualitative due to limited hardware)
-* Engineering trade-offs
-* Database structure
-* API design
-* Practical constraints
-
-This version reflects *everything we discussed* in simple, clear language.
-
----
 
 # 📌 Overview
 
@@ -64,10 +51,11 @@ Faces in classroom videos are often tilted or partially rotated.
 
 * MTCNN aligns faces properly
 * Ensures consistent FaceNet embeddings
+* light wieght model for alignment 
 
 ## **3️⃣ FaceNet — Embedding Generation**
 
-We create a **128-dimension embedding** for each face.
+We create a **512-dimension embedding** for each face.
 
 * Stable identity representation
 * Works reliably even with low-resolution classroom frames
@@ -91,6 +79,11 @@ A match is valid if:
 cosine_similarity >= 0.80
 ```
 
+During testing, we experimented with different cosine similarity thresholds. When the threshold was set below 0.80, the number of false positives increased significantly, meaning the system started marking the wrong students as present. Even though lower thresholds improved true positive detection, the false positives were too high to use in a real classroom environment.
+
+To keep the system reliable and avoid incorrect attendance marks, we decided to prioritize reducing false positives, even if it meant compromising a bit on true positive rates.
+Therefore, the threshold 0.80 was
+
 ## **5️⃣ Frame Skipping — Every 30th Frame**
 
 Due to limited hardware (no GPU):
@@ -98,7 +91,7 @@ Due to limited hardware (no GPU):
 * Processing every frame was too slow
 * Skipping too many frames missed faces
 
-We found **30th frame** to be the ideal balance:
+We found **30th frame** to be the ideal balance (still experminting on it ):
 
 * Fast enough to process full classroom videos
 * Still captures each student multiple times
