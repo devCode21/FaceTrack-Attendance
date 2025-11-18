@@ -8,9 +8,14 @@ import torch
 import json
 import os
 import pandas as pd
+from fastapi.staticfiles import StaticFiles
+
+import shutil
+
 
 
 app = FastAPI()
+app.mount("/results", StaticFiles(directory="results"), name="results")
 
 class Course(BaseModel):
     course_name: str
@@ -27,6 +32,8 @@ class LoginDetails(BaseModel):
 @app.post('/Create_New_Course')
 def create_new_course(course: Course):
     Course_content = course.dict()
+    if 'course_name' not in Course_content or 'teacher_name' not in Course_content or 'class_name' not in Course_content or 'password' not in Course_content:
+        return {'status': 'failed', 'message': 'Missing required fields'}
     print(Course_content.keys(), type(Course_content))
     course_name = Course_content['course_name']
     # get the course details from the Courses_Details database
@@ -83,6 +90,11 @@ async def attendance_data(course_id: str, file: UploadFile = File(...)):
 @app.post('/attendance_image/{course_id}')
 
 def get_attendance_from_image(course_id: str, file: UploadFile = File(...)):
+    if not file.filename.lower().endswith(('.png', '.jpg', '.jpeg')):
+        return {"status": "failed", "message": "Invalid file type. Please upload an image file."}
+    if not file:
+        return {"status": "failed", "message": "No file uploaded."}
+    
     os.makedirs("uploads", exist_ok=True)
     file_path = f"uploads/{file.filename}"
     with open(file_path, "wb") as f:
@@ -98,8 +110,29 @@ def get_attendance_from_image(course_id: str, file: UploadFile = File(...)):
     df['Names']= [list(res.keys())[0] for res in results]
     df['Accuracy']= [list(res.values())[0] for res in results]
     df.to_csv(f'uploads/attendance_{course_id}.csv', index=False)
-    return {"filename": file.filename, "content_type": file.content_type, "results": results}
+    return {"filename": file.filename, "content_type": file.content_type, "results": results , "status" : "success"}
 
+def get_csv_file(course_id: str):
+    file_path = f'uploads/attendance_{course_id}.csv'
+    if os.path.exists(file_path):
+        return {"file_path": file_path , "status": "success"}
+    else:
+        return {"status": "failed", "message": "File not found"}
 
+def get_images_list(course_id: str):
+    dir_path =f'results/{course_id}/'
+    if os.path.exists(dir_path):
+        images = os.listdir(dir_path)
+        images_paths = [os.path.join(dir_path, img) for img in images]
+        image_name = [img.split("_")[0] for img in images]
+        image_accuracy = [img.split("_")[1].split('.jpg')[0] for img in images]
+        imag_dict={'images': images_paths , 'image_name': image_name , 'image_accuracy': image_accuracy}
+        try:
+            os.remove(f'results/{course_id}')
+        except Exception as e:
+            print(f"Error removing directory: {e}")
+        return {"images": imag_dict , "status": "success"}
+    else:
+        return {"status": "failed", "message": "Directory not found"}
 
 
