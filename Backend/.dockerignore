@@ -1,0 +1,10 @@
+.env
+logging/
+*.csv
+*.npy
+myenv/
+results
+.git
+.gitignore
+Dockerfile
+docker-compose.yml
