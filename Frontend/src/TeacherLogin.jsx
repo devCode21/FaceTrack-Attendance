@@ -1,19 +1,101 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { BookOpen, User, Lock, ArrowRight, CornerDownRight } from "lucide-react";
+import { BookOpen, User, Lock, ArrowRight, CornerDownRight, Check, X } from "lucide-react";
+import axios from "axios";
+import { useNavigate } from "react-router";
+import { Get_course_id_sigin_API } from "./backendAPI";
+import { Login_data , add_course_info , add_form } from "./state";
+import { useDispatch , useSelector } from "react-redux";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardDescription,
+  CardTitle,
+  Button,
+  LabeledInput
+} from "../components/card_componets";
 
-import { Card , CardContent ,CardHeader,CardDescription,CardTitle ,Button ,Input ,LabeledInput } from "../components/card_componets";
 
-const useToast = () => ({ toast: ({ title }) => console.log("TOAST:", title) });
-const Toaster = () => null;
-// ======================= MAIN COMPONENT ================================
+// =============================
+// BEST TOAST SYSTEM (GLOBAL)
+// =============================
+const useToast = () => {
+  return {
+    toast: ({ title, description, status }) => {
+      const color =
+        status === "success"
+          ? "bg-green-600"
+          : status === "error"
+          ? "bg-red-600"
+          : "bg-gray-700";
+
+      const icon =
+        status === "success"
+          ? `<svg class='w-5 h-5' fill='none' stroke='white' stroke-width='2' viewBox='0 0 24 24'><path d='M5 13l4 4L19 7'/></svg>`
+          : status === "error"
+          ? `<svg class='w-5 h-5' fill='none' stroke='white' stroke-width='2' viewBox='0 0 24 24'><path d='M6 18L18 6M6 6l12 12'/></svg>`
+          : "";
+
+      const el = document.createElement("div");
+      el.className = `
+        fixed top-6 right-6 px-4 py-3 rounded-xl text-white shadow-2xl 
+        flex items-start gap-3 animate-toast-in ${color} z-[9999]
+      `;
+
+      el.innerHTML = `
+        <div>${icon}</div>
+        <div>
+          <strong class="text-sm">${title}</strong>
+          <p class="text-xs opacity-90 mt-0.5">${description || ""}</p>
+        </div>
+      `;
+
+      document.body.appendChild(el);
+
+      setTimeout(() => {
+        el.classList.add("animate-toast-out");
+        setTimeout(() => el.remove(), 300);
+      }, 2500);
+    }
+  };
+};
+
+
+// =============================
+// CSS (Add to index.css)
+// =============================
+/*
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(-10px) scale(0.95); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes toastOut {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to   { opacity: 0; transform: translateY(-10px) scale(0.95); }
+}
+
+.animate-toast-in { animation: toastIn 0.25s ease-out forwards; }
+.animate-toast-out { animation: toastOut 0.25s ease-in forwards; }
+
+*/
+
+
+// =============================
+// MAIN COMPONENT
+// =============================
 export default function CourseEntryForm() {
+  const dispatch =useDispatch()
+  
+  const navigate = useNavigate();
   const { toast } = useToast();
 
   const [form, setForm] = useState({
     class: "",
-    className: "",
-    teacherName: "",
+    course_name: "",
+    teacher_name: "",
     password: "",
   });
 
@@ -27,61 +109,114 @@ export default function CourseEntryForm() {
 
   const validate = () => {
     let newErrors = {};
-    if (!form.class.trim()) newErrors.class = "Class ID is required.";
-    if (!form.className.trim()) newErrors.className = "Class Name is required.";
-    if (!form.teacherName.trim()) newErrors.teacherName = "Teacher Name is required.";
+    if (!form.class.trim()) newErrors.class = "Class is required.";
+    if (!form.course_name.trim()) newErrors.course_name = "Course Name is required.";
+    if (!form.teacher_name.trim()) newErrors.teacher_name = "Teacher Name is required.";
     if (form.password.length < 4) newErrors.password = "Minimum 4 characters required.";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
 
     setLoading(true);
-    setTimeout(() => {
+
+    const payload = {
+      course_name: form.course_name,
+      teacher_name: form.teacher_name,
+      class_name: form.class,
+      password: form.password,
+    };
+
+    try {
+      const respone =await axios.post(Get_course_id_sigin_API, payload);
+      console.log(respone.data.data.Course_id)
+
+      toast({
+        title: "Verification Successful",
+        description: "Course verified successfully.",
+        status: "success",
+      });
+
+      dispatch(Login_data());
+      dispatch(add_form({"formdata":payload}))
+      dispatch(add_course_info({"CourseID":respone.data.data.Course_id }))
       setLoading(false);
-      toast({ title: "Verification successful" });
-      console.log("Navigating with data:", form);
-    }, 1200);
+      navigate("/dashboard");
+
+    } catch (err) {
+      console.log(err)
+      toast({
+        title: "Verification Failed",
+        description: err.response.data.message,
+        status: "error",
+      });
+
+      setLoading(false);
+    }
   };
 
   const cardVariants = {
-    hidden: { opacity: 0, y: 60, scale: 0.95 },
-    visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.6, ease: "easeOut" } },
+    hidden: { opacity: 0, y: 50, scale: 0.95 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      transition: { duration: 0.6, ease: "easeOut" },
+    },
   };
 
   return (
-    <div className="min-h-screen flex flex-col gap-10 justify-center items-center bg-gradient-to-br from-black via-zinc-900 to-black p-6 relative overflow-hidden">
+    <div
+      className="
+      min-h-screen flex flex-col items-center justify-center 
+      bg-gradient-to-br from-gray-900 via-black to-gray-900 
+      p-4 sm:p-6 relative overflow-hidden
+    "
+    >
+      {/* Background Glow */}
+      <div className="absolute top-10 left-10 w-52 h-52 sm:w-60 sm:h-60 bg-blue-500/20 blur-[80px] rounded-full" />
+      <div className="absolute bottom-10 right-10 w-60 h-60 sm:w-72 sm:h-72 bg-purple-500/20 blur-[80px] rounded-full" />
 
-      {/* Decorative Background Glows */}
-      <div className="absolute top-10 left-10 w-52 h-52 bg-sky-500/10 blur-3xl rounded-full" aria-hidden />
-      <div className="absolute bottom-10 right-10 w-64 h-64 bg-purple-500/10 blur-[90px] rounded-full" aria-hidden />
+      <motion.div
+        variants={cardVariants}
+        initial="hidden"
+        animate="visible"
+        className="w-full max-w-md px-2"
+      >
+        <Card className="shadow-2xl border border-gray-700 bg-black/40 backdrop-blur-xl rounded-2xl">
+          <CardHeader className="space-y-2 text-center">
 
-      <Toaster />
-
-      <motion.div variants={cardVariants} initial="hidden" animate="visible" className="w-full flex justify-center">
-        <Card className="shadow-[0_0_45px_rgba(0,0,0,0.55)] border-zinc-700 backdrop-blur-2xl">
-          <CardHeader>
-            {/* Top badge */}
-            <div className="mb-3 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-800 border border-zinc-700 text-neutral-300 text-xs uppercase tracking-wide w-fit">
-              <span className="h-2 w-2 bg-sky-400 rounded-full" />
-              Secure Access Portal
+            {/* Tag */}
+            <div
+              className="
+              mx-auto mb-2 inline-flex items-center gap-2 px-3 py-1 rounded-full
+              bg-gray-800 border border-gray-700 text-gray-300 text-xs uppercase tracking-widest
+            "
+            >
+              <span className="h-2 w-2 bg-blue-400 rounded-full" />
+              Secure Access
             </div>
 
-            <CardTitle>Course Enrollment</CardTitle>
-            <CardDescription>Enter course details to begin automated attendance.</CardDescription>
+            <CardTitle className="text-2xl font-semibold text-white">
+              Course Enrollment
+            </CardTitle>
+            <CardDescription className="text-gray-400 text-sm">
+              Enter your course details to begin automated attendance
+            </CardDescription>
           </CardHeader>
 
-          <CardContent>
+          <CardContent className="px-4 sm:px-6">
             <form onSubmit={handleSubmit} className="space-y-5">
+
               <LabeledInput
                 Icon={CornerDownRight}
-                label="Class ID"
+                label="Class"
                 id="class"
-                placeholder="e.g., CSC 401"
+                placeholder="e.g., CSE-301"
                 value={form.class}
                 onChange={handleChange}
                 error={errors.class}
@@ -89,22 +224,22 @@ export default function CourseEntryForm() {
 
               <LabeledInput
                 Icon={BookOpen}
-                label="Class Name"
-                id="className"
-                placeholder="Advanced ML"
-                value={form.className}
+                label="Course Name"
+                id="course_name"
+                placeholder="Advanced Machine Learning"
+                value={form.course_name}
                 onChange={handleChange}
-                error={errors.className}
+                error={errors.course_name}
               />
 
               <LabeledInput
                 Icon={User}
                 label="Teacher Name"
-                id="teacherName"
-                placeholder="Dr. Jane Doe"
-                value={form.teacherName}
+                id="teacher_name"
+                placeholder="Dr. John Doe"
+                value={form.teacher_name}
                 onChange={handleChange}
-                error={errors.teacherName}
+                error={errors.teacher_name}
               />
 
               <LabeledInput
@@ -118,10 +253,15 @@ export default function CourseEntryForm() {
                 error={errors.password}
               />
 
-              {/* Helper Note */}
-              <p className="text-neutral-500 text-xs text-center -mt-2">Your details are encrypted & secure</p>
+              <p className="text-gray-500 text-xs text-center -mt-2">
+                Your details are encrypted & secure
+              </p>
 
-              <Button type="submit" disabled={loading} className="w-full flex items-center gap-2 mt-6">
+              <Button
+                type="submit"
+                disabled={loading}
+                className="w-full flex items-center justify-center gap-2 mt-4"
+              >
                 {loading ? (
                   <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                 ) : (

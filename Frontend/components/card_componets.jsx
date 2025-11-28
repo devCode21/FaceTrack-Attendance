@@ -1,3 +1,9 @@
+import { motion } from "framer-motion";
+
+export const fadeUp = {
+  hidden: { opacity: 0, y: 30 },
+  show: { opacity: 1, y: 0 },
+};
 
 export const Card = ({ children, className }) => (
   <div
@@ -52,4 +58,18 @@ export const LabeledInput = ({ Icon, label, id, error, ...props }) => (
     </div>
     {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
   </div>
+);
+
+
+export const FeatureCard = ({ icon: Icon, title, description }) => (
+  <motion.div
+    variants={fadeUp}
+    className="p-6 rounded-2xl bg-zinc-900/60 backdrop-blur-xl border border-zinc-800 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+  >
+    <div className="p-3 w-fit rounded-xl bg-zinc-800/70 border border-zinc-700 shadow-inner">
+      <Icon className="w-6 h-6 text-neutral-200" />
+    </div>
+    <h4 className="font-semibold text-neutral-100 mt-4 text-lg tracking-tight">{title}</h4>
+    <p className="text-sm text-neutral-400 mt-1 leading-relaxed">{description}</p>
+  </motion.div>
 );

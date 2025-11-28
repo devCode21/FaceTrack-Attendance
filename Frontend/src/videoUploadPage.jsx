@@ -1,235 +1,258 @@
-
-import React, { useState, useRef, useCallback } from "react";
-import { motion } from "framer-motion";
+import React, { useState, useRef, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import * as Icons from "lucide-react";
+import axios from "axios";
+import { useSelector } from "react-redux";
+import { get_attendance_from_video, get_attendance_from_image } from "./backendAPI";
 
-// ---------------- Toast Mock ----------------
-const useToast = () => ({ push: (msg) => console.log("TOAST:", msg) });
+export default function CreativeAttendancePage() {
+  const { CourseID, formdata } = useSelector((state) => state.Data);
 
-const fade = {
-  hidden: { opacity: 0, y: 20 },
-  show: { opacity: 1, y: 0 }
-};
+  const [file, setFile] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [results, setResults] = useState(null);
+  const [showModal, setShowModal] = useState(false);
 
-// ---------------- Layout ----------------
-const PageHeader = () => (
-  <div className="w-full border-b border-zinc-800 bg-neutral-950/70 backdrop-blur-lg p-6 sticky top-0 z-40 shadow-xl">
-    <div className="max-w-5xl mx-auto flex items-center justify-between">
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-600 to-indigo-600 flex items-center justify-center text-white font-bold">
-          FR
-        </div>
-        <div>
-          <h1 className="text-xl font-semibold text-neutral-100">Attendance Processing</h1>
-          <p className="text-xs text-neutral-400">Powered by YOLO • MTCNN • ResNet</p>
-        </div>
-      </div>
-      <button className="text-neutral-400 hover:text-red-400 transition flex items-center gap-2">
-        <Icons.LogOut className="w-4 h-4" /> Logout
-      </button>
-    </div>
-  </div>
-);
+  const fileRef = useRef(null);
+  const bgRef = useRef(null);
 
-// ---------------- Card Wrapper ----------------
-const Card = ({ title, icon: Icon, children }) => (
-  <motion.div
-    variants={fade}
-    initial="hidden"
-    animate="show"
-    className="bg-neutral-900/60 border border-zinc-800 backdrop-blur-xl rounded-2xl p-6 shadow-xl"
-  >
-    <div className="flex items-center gap-3 mb-4">
-      <div className="p-2 rounded-md bg-neutral-800/50 border border-zinc-700">
-        {Icon && <Icon className="w-5 h-5 text-sky-400" />}
-      </div>
-      <h3 className="text-lg font-semibold text-neutral-100">{title}</h3>
-    </div>
-    {children}
-  </motion.div>
-);
+  // -----------------------------------------
+  // Parallax background movement
+  // -----------------------------------------
+  useEffect(() => {
+    const handler = (e) => {
+      const x = (e.clientX / window.innerWidth - 0.5) * 35;
+      const y = (e.clientY / window.innerHeight - 0.5) * 35;
+      if (bgRef.current) bgRef.current.style.transform = `translate(${x}px, ${y}px)`;
+    };
+    window.addEventListener("mousemove", handler);
+    return () => window.removeEventListener("mousemove", handler);
+  }, []);
 
-// ---------------- Step 1: Image Upload ----------------
-const ImageUpload = ({ onUpload }) => {
-  const [images, setImages] = useState([]);
-  const ref = useRef(null);
-  const toast = useToast();
+  // -----------------------------------------
+  // Score color badge
+  // -----------------------------------------
+  const confidenceColor = (score) => {
+    if (score >= 0.75) return "text-green-400";
+    if (score >= 0.45) return "text-yellow-400";
+    return "text-red-400";
+  };
 
-  const addFiles = (files) => {
-    const imgs = Array.from(files).filter((f) => f.type.startsWith("image/"));
-    if (!imgs.length) return toast.push({ title: "No valid images" });
-    setImages((prev) => [...prev, ...imgs].slice(0, 30));
+  // -----------------------------------------
+  // Process Attendance
+  // -----------------------------------------
+  const processAttendance = async () => {
+    if (!file) return alert("Select a file first");
+    if (loading) return;
+
+    setLoading(true);
+    setResults(null);
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      let resp;
+
+      if (file.type.startsWith("image")) {
+        resp = await axios.post(get_attendance_from_image + CourseID, formData);
+      } else {
+        resp = await axios.post(get_attendance_from_video + CourseID, formData);
+      }
+
+      if (resp.status === 200) {
+        alert("Attendance Processed");
+        setResults(resp.data.results);
+      }
+    } catch (err) {
+      alert("Failed to process");
+    }
+
+    setLoading(false);
   };
 
   return (
-    <Card title="Upload Images" icon={Icons.Image}>
-      <div
-        onDragOver={(e) => e.preventDefault()}
-        onDrop={(e) => { e.preventDefault(); addFiles(e.dataTransfer.files); }}
-        onClick={() => ref.current && ref.current.click()}
-        className="border-2 border-dashed border-sky-500/40 rounded-xl p-8 text-center cursor-pointer hover:bg-neutral-800/30 transition"
-      >
-        <Icons.UploadCloud className="w-8 h-8 mx-auto text-sky-400" />
-        <p className="text-neutral-400 mt-2 text-sm">Drag & drop or click to upload (Max 30)</p>
+    <div className="relative min-h-screen bg-black text-white overflow-hidden">
+
+      {/* Parallax Background */}
+      <div ref={bgRef} className="fixed inset-0 -z-10 transition-transform duration-300">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-sky-600/30 blur-3xl rounded-full"></div>
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-purple-600/30 blur-3xl rounded-full"></div>
       </div>
 
-      <input ref={ref} type="file" accept="image/*" multiple className="hidden" onChange={(e) => addFiles(e.target.files)} />
-
-      {images.length > 0 && (
-        <div className="mt-4">
-          <div className="flex flex-wrap gap-3 max-h-40 overflow-auto p-2 bg-neutral-900/40 rounded-lg border border-zinc-700">
-            {images.map((f, i) => (
-              <div key={i} className="relative w-20 h-20 rounded-md overflow-hidden border border-zinc-700">
-                <img src={URL.createObjectURL(f)} alt={`preview-${i}`} className="w-full h-full object-cover" />
-                <button
-                  onClick={() => setImages((s) => s.filter((_, idx) => idx !== i))}
-                  className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1"
-                >
-                  <Icons.X className="w-3 h-3" />
-                </button>
-              </div>
-            ))}
+      {/* HEADER */}
+      <header className="w-full border-b border-white/10 p-6 bg-black/50 backdrop-blur-xl sticky top-0 z-20">
+        <div className="max-w-4xl mx-auto flex items-center gap-3">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-sky-500 to-indigo-600 flex items-center justify-center text-xl font-bold">
+            FR
           </div>
+          <div>
+            <h1 className="text-xl font-semibold">Attendance Processor</h1>
+            <p className="text-xs text-neutral-400">Smart Recognition System</p>
+          </div>
+        </div>
+      </header>
+
+      {/* MAIN */}
+      <main className="max-w-4xl mx-auto px-6 py-10 space-y-10">
+
+        {/* CLASS DETAILS */}
+        <motion.div
+          initial={{ opacity: 0, x: 40 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="p-8 rounded-3xl bg-neutral-900/60 border border-white/10 shadow-xl"
+        >
+          <h2 className="text-xl font-semibold flex items-center gap-2">
+            <Icons.BadgeInfo className="text-sky-400" /> Class Details
+          </h2>
+
+          <div className="mt-4 p-4 rounded-xl bg-black/30 border border-white/10 text-lg space-y-1">
+            <p>
+              <span className="font-semibold text-white">Class :</span> {formdata?.class}
+            </p>
+            <p>
+              <span className="font-semibold text-white">Course :</span> {formdata?.course_name}
+            </p>
+          </div>
+        </motion.div>
+
+        {/* FILE UPLOAD */}
+        <motion.div
+          initial={{ opacity: 0, x: 40 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="p-10 rounded-3xl bg-neutral-900/60 border border-white/10 shadow-xl text-center"
+        >
+          <h2 className="text-xl font-semibold mb-6 flex items-center justify-center gap-2">
+            <Icons.UploadCloud className="text-sky-400" /> Upload File
+          </h2>
+
+          <div
+            onClick={() => !loading && fileRef.current.click()}
+            className={`cursor-pointer p-10 border-2 border-dashed border-sky-500/40 rounded-2xl transition ${
+              loading ? "opacity-50 pointer-events-none" : "hover:bg-neutral-800/40"
+            }`}
+          >
+            <Icons.FolderOpen className="w-12 h-12 mx-auto text-sky-400" />
+            <p className="text-neutral-300 mt-2 text-sm">Click to choose image or video</p>
+          </div>
+
+          <input
+            type="file"
+            className="hidden"
+            ref={fileRef}
+            accept="image/*,video/*"
+            disabled={loading}
+            onChange={(e) => setFile(e.target.files[0])}
+          />
+
+          {file && <p className="mt-4 text-neutral-300">Selected: {file.name}</p>}
 
           <button
-            onClick={() => { onUpload(images); setImages([]); }}
-            className="mt-4 w-full px-4 py-2 rounded-lg bg-sky-600 text-white font-medium hover:bg-sky-700"
-            type="button"
+            disabled={loading}
+            onClick={processAttendance}
+            className="mt-6 w-full py-4 bg-indigo-600 hover:bg-indigo-700 rounded-xl font-semibold text-lg shadow-lg"
           >
-            Upload {images.length} Image(s)
+            {loading ? (
+              <div className="flex items-center justify-center gap-3">
+                <Icons.Loader2 className="w-5 h-5 animate-spin" />
+                Processing...
+              </div>
+            ) : (
+              "Process File"
+            )}
           </button>
-        </div>
-      )}
-    </Card>
-  );
-};
+        </motion.div>
 
-// ---------------- Step 2: Video Upload ----------------
-const VideoUpload = ({ onUpload }) => {
-  const [video, setVideo] = useState(null);
-  const toast = useToast();
+        {/* RESULTS */}
+        {results && (
+          <motion.div
+            initial={{ opacity: 0, x: 40 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="p-8 rounded-3xl bg-neutral-900/60 border border-white/10 shadow-xl"
+          >
+            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+              <Icons.Users className="text-sky-400" /> Recognized Students
+            </h2>
 
-  return (
-    <Card title="Upload Video" icon={Icons.Video}>
-      <input
-        type="file"
-        accept="video/*"
-        onChange={(e) => setVideo(e.target.files[0])}
-        className="block w-full text-sm text-neutral-300 file:px-4 file:py-2 file:rounded-lg file:bg-sky-600/20 file:text-sky-300"
-      />
+            <div className="grid gap-4">
+              {results.map((item, idx) => {
+                const name = Object.keys(item)[0];
+                const score = Object.values(item)[0];
 
-      {video && (
-        <div className="mt-3 p-3 bg-neutral-900/40 rounded-lg border border-zinc-700 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Icons.FileText className="w-5 h-5 text-sky-400" />
-            <p className="text-sm text-neutral-200 truncate max-w-40">{video.name}</p>
-          </div>
-          <button onClick={() => setVideo(null)} className="text-red-500">Remove</button>
-        </div>
-      )}
+                return (
+                  <div
+                    key={idx}
+                    className="flex justify-between bg-neutral-800/50 border border-neutral-700 p-3 rounded-xl"
+                  >
+                    <span className="font-medium text-white">{name}</span>
+                    <span className={`${confidenceColor(score)} font-mono text-lg`}>
+                      {(score * 100).toFixed(2)}%
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
 
-      <button
-        onClick={() => { if (video) { onUpload(video); setVideo(null); } }}
-        className="mt-4 w-full px-4 py-2 rounded-lg bg-sky-600 text-white hover:bg-sky-700"
-        type="button"
-      >
-        Upload Video
-      </button>
-    </Card>
-  );
-};
+            <button
+              onClick={() => setShowModal(true)}
+              className="w-full mt-6 py-4 rounded-xl border border-neutral-700 hover:bg-neutral-800/40 text-lg font-semibold flex items-center justify-center gap-2"
+            >
+              <Icons.Table className="w-5 h-5" />
+              View Attendance Table
+            </button>
+          </motion.div>
+        )}
+      </main>
 
-// ---------------- Step 3: Actions + Step 4: Reports ----------------
-const AttendanceActions = ({ onDownload, onView }) => (
-  <Card title="Attendance Actions" icon={Icons.CheckCircle}>
-    <button className="w-full px-4 py-3 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700" type="button">
-      Run Recognition
-    </button>
+      {/* MODAL */}
+      <AnimatePresence>
+        {showModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center"
+          >
+            <motion.div
+              initial={{ scale: 0.8 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.8 }}
+              className="bg-neutral-900 p-8 rounded-3xl border border-white/10 shadow-xl max-w-lg w-full"
+            >
+              <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                <Icons.Table />
+                Attendance Table
+              </h3>
 
-    <div className="grid grid-cols-2 gap-3 mt-4">
-      <button onClick={onDownload} className="px-4 py-2 rounded-lg border border-sky-500 text-sky-400 hover:bg-neutral-800/40" type="button">
-        <Icons.Download className="w-4 h-4 inline mr-2" /> Download CSV
-      </button>
-      <button onClick={onView} className="px-4 py-2 rounded-lg border border-zinc-700 text-neutral-300 hover:bg-neutral-800/40" type="button">
-        <Icons.Table className="w-4 h-4 inline mr-2" /> View Attendance
-      </button>
-    </div>
-  </Card>
-);
+              <div className="space-y-3 max-h-96 overflow-auto p-2">
+                {results.map((item, i) => {
+                  const name = Object.keys(item)[0];
+                  const score = Object.values(item)[0];
 
-// ---------------- Instructions ----------------
-const Instructions = () => (
-  <Card title="Instructions" icon={Icons.Info}>
-    <ul className="text-sm text-neutral-300 space-y-2">
-      <li>1. Upload lecture images OR upload a full video.</li>
-      <li>2. Click <strong>Run Recognition</strong> to process attendance.</li>
-      <li>3. Use <strong>Download CSV</strong> to save results or <strong>View Attendance</strong> to inspect.</li>
-    </ul>
-  </Card>
-);
+                  return (
+                    <div
+                      key={i}
+                      className="flex justify-between p-3 bg-neutral-800/50 rounded-xl border border-neutral-700"
+                    >
+                      <span className="text-white font-medium">{name}</span>
+                      <span className={`${confidenceColor(score)} font-mono text-lg`}>
+                        {(score * 100).toFixed(2)}%
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
 
-// ---------------- Main Page ----------------
-export default function TeacherAttendancePage() {
-  const toast = useToast();
-
-  // Use stable handlers instead of inline arrow functions in JSX
-  const handleImageUpload = useCallback((files) => {
-    // files is an array of File objects
-    console.log("Images uploaded:", files.map((f) => f.name));
-    toast.push({ title: "Images Uploaded", description: `${files.length} image(s)` });
-  }, []);
-
-  const handleVideoUpload = useCallback((video) => {
-    console.log("Video uploaded:", video?.name);
-    toast.push({ title: "Video Uploaded", description: video?.name });
-  }, []);
-
-  const handleDownloadCSV = useCallback(() => {
-    // mock CSV
-    const csv = "id,name,status,time\n1,Student A,Present,09:05 AM";
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `attendance-${new Date().toISOString()}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  }, []);
-
-  const handleViewAttendance = useCallback(() => {
-    // In production this would navigate / open modal. For design focus, we'll just log.
-    console.log("View Attendance clicked");
-  }, []);
-
-  return (
-    <div className="min-h-screen bg-black text-neutral-200">
-      <PageHeader />
-
-      <div className="max-w-5xl mx-auto px-6 py-10 space-y-10">
-        <motion.h2
-          variants={fade}
-          initial="hidden"
-          animate="show"
-          className="text-3xl font-bold text-neutral-100 mb-4"
-        >
-          Process Lecture Attendance
-        </motion.h2>
-
-        {/* STEPS IN ORDER */}
-        <div className="space-y-10">
-          <ImageUpload onUpload={handleImageUpload} />
-          <VideoUpload onUpload={handleVideoUpload} />
-          <AttendanceActions onDownload={handleDownloadCSV} onView={handleViewAttendance} />
-          <Instructions />
-        </div>
-      </div>
-
-      <footer className="border-t border-zinc-800 bg-neutral-900/60 mt-8">
-        <div className="max-w-5xl mx-auto px-6 py-6 flex items-center justify-between text-sm text-neutral-500">
-          <div>© {new Date().getFullYear()} FaceRec Attendance</div>
-          <div>YOLO • MTCNN • ResNet • MongoDB</div>
-        </div>
-      </footer>
+              <button
+                onClick={() => setShowModal(false)}
+                className="w-full mt-6 py-3 bg-red-600 hover:bg-red-700 rounded-xl font-semibold flex items-center justify-center gap-2"
+              >
+                <Icons.X className="w-5 h-5" /> Close
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

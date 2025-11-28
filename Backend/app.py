@@ -9,16 +9,55 @@ import json
 import os
 import pandas as pd
 from fastapi.staticfiles import StaticFiles
-
+from fastapi.responses import JSONResponse
 import shutil
+from fastapi import status, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 
 
+class API_respone:
+    def __init__(self ,statusCode , status_mesaage , data ):
+        self.statusCode =statusCode
+        self.status_message =status_mesaage
+        self.data =data
+    
+    def api_respone(self):
+        return JSONResponse(
+            content={"message": self.status_message , "data" : self.data},
+            status_code=self.statusCode
+        )
+    
+
+class ErrorResponse:
+    def __init__(self, statusCode: int, message: str):
+        self.statusCode = statusCode
+        self.message = message
+
+    def send(self):
+        return JSONResponse(
+            content={"message": self.message},
+            status_code=self.statusCode
+        )
+
+
+
+    
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],        # allow ANY origin
+    allow_credentials=True,
+    allow_methods=["*"],        # allow all methods GET, POST, PUT, DELETE
+    allow_headers=["*"],        # allow all headers
+)
+
+
 app.mount("/results", StaticFiles(directory="results"), name="results")
 
 class Course(BaseModel):
-    course_name: str
+    course_name : str 
     teacher_name: str
     class_name: str
     password: str
@@ -33,22 +72,22 @@ class LoginDetails(BaseModel):
 def create_new_course(course: Course):
     Course_content = course.dict()
     if 'course_name' not in Course_content or 'teacher_name' not in Course_content or 'class_name' not in Course_content or 'password' not in Course_content:
-        return {'status': 'failed', 'message': 'Missing required fields'}
+        return  ErrorResponse(404 , "Course Name not found " ).send()
     print(Course_content.keys(), type(Course_content))
     course_name = Course_content['course_name']
     # get the course details from the Courses_Details database
     course_name_details = Course_info.find_one({'course_name': course_name , 'teacher_name': Course_content['teacher_name'], 'class_name': Course_content['class_name']})
     if course_name_details:
-        return {'status': 'failed', 'message': 'Course already exists'}
+        return ErrorResponse(400 , "Course Name already exist  " ).send()
     class_embeddings_id = Class_Embeddings.find_one({'class_name': Course_content['class_name']})
     if not class_embeddings_id:
-        return {'status': 'failed', 'message': 'Wrong Class Name'}
+        return ErrorResponse(400 , "wrong class name  " ).send()
     else:
         class_embeddings_id = class_embeddings_id['_id']
     Course_content['class_name'] = class_embeddings_id
     Course=Course_info.insert_one(Course_content)
 
-    return {'status': 'success', 'message': 'Course created successfully' , "data":{'Course_id': str(Course.inserted_id), 'Class_Embeddings_id': str(class_embeddings_id)}}   
+    return API_respone(200 , "Create succesfully " ,{'Course_id': str(Course.inserted_id), 'Class_Embeddings_id': str(class_embeddings_id)}  ).api_respone()
 
 
 @app.post('/login_existing_course')
@@ -84,7 +123,7 @@ async def attendance_data(course_id: str, file: UploadFile = File(...)):
     df['Accuracy']= [k.values() for k in results]
     df.to_csv(f'uploads/attendance_{course_id}.csv', index=False)
 
-    return {"filename": file.filename, "content_type": file.content_type, "results": results    }
+    return { "results": results  , "status":"successfully sent the attendance"  }
 
 
 @app.post('/attendance_image/{course_id}')
@@ -112,6 +151,8 @@ def get_attendance_from_image(course_id: str, file: UploadFile = File(...)):
     df.to_csv(f'uploads/attendance_{course_id}.csv', index=False)
     return {"filename": file.filename, "content_type": file.content_type, "results": results , "status" : "success"}
 
+
+@app.get('/csv_file/{course_id}')
 def get_csv_file(course_id: str):
     file_path = f'uploads/attendance_{course_id}.csv'
     if os.path.exists(file_path):
