@@ -108,7 +108,7 @@ export default function CreativeAttendancePage() {
 
           <div className="mt-4 p-4 rounded-xl bg-black/30 border border-white/10 text-lg space-y-1">
             <p>
-              <span className="font-semibold text-white">Class :</span> {formdata?.class}
+              <span className="font-semibold text-white">Class :</span> {formdata?.class_name}
             </p>
             <p>
               <span className="font-semibold text-white">Course :</span> {formdata?.course_name}
