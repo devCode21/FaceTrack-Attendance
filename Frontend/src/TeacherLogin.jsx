@@ -3,8 +3,8 @@ import { motion } from "framer-motion";
 import { BookOpen, User, Lock, ArrowRight, CornerDownRight, Check, X } from "lucide-react";
 import axios from "axios";
 import { useNavigate } from "react-router";
-import { Get_course_id_sigin_API } from "./backendAPI";
-import { Login_data , add_course_info , add_form } from "./state";
+import { Get_course_id_sigin_API } from './BackendApi.js'
+import { Login_data , add_course_info , add_form } from "./state.js";
 import { useDispatch , useSelector } from "react-redux";
 import {
   Card,
