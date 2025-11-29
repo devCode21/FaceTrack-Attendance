@@ -1,6 +1,5 @@
 from PIL import Image
 from src.utils.log import setup_logger
-from retinaface import RetinaFace
 logger = setup_logger()
 from src.components.header import  ObjectId
  # For MongoDB queries
