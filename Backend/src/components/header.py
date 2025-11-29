@@ -28,5 +28,6 @@ from src.components.helper_function import get_embeddings_from_database , detect
 
 
 
-Yolo_Model_path = r'uploads\yolov8n-face.pt'
+Yolo_Model_path = r"uploads\yolov8n-face.pt"
+
    
