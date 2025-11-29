@@ -1,7 +1,7 @@
 
 import cv2
 
-from src.components.header import os, Path, Image, torch , MTCNN, InceptionResnetV1  , EDSR_Model_path
+from src.components.header import os, Path, Image, torch , MTCNN, InceptionResnetV1 
 from src.components.helper_function import increase_resolution
 from src.DataBase.pymong import DB , Course_info , Class_Embeddings
 import numpy as np
@@ -9,9 +9,9 @@ mtcnn = MTCNN(image_size=224, margin=40)
 resnet = InceptionResnetV1(pretrained='vggface2' , classify=False).eval()
 
 
-sr = cv2.dnn_superres.DnnSuperResImpl_create()
-sr.readModel(EDSR_Model_path)
-sr.setModel("edsr", 2)
+# sr = cv2.dnn_superres.DnnSuperResImpl_create()
+# sr.readModel(EDSR_Model_path)
+# sr.setModel("edsr", 2)
  
 def get_info_from_image(image_path):
     image_path = str(image_path)

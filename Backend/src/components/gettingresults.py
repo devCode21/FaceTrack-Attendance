@@ -1,6 +1,6 @@
 # --- IMPORTS ---
-from src.components.header import os, sys, cv2, torch, YOLO, MTCNN, InceptionResnetV1, setup_logger , Yolo_Model_path, EDSR_Model_path
-from src.components.helper_function import get_embeddings_from_database , detect_faces_from_frame, increase_resolution  ,retina_face_detect
+from src.components.header import os, sys, cv2, torch, YOLO, MTCNN, InceptionResnetV1, setup_logger , Yolo_Model_path
+from src.components.helper_function import get_embeddings_from_database , detect_faces_from_frame
 from src.components.UserEmbedding import DB, Course_info, Class_Embeddings    
 
 
@@ -17,15 +17,6 @@ try:
         sys.exit(1)
     Yolo = YOLO(yolo_model_path)
 
-    edsr_model_path = EDSR_Model_path
-    if not os.path.exists(edsr_model_path):
-        logger.error(f"EDSR model not found at: {edsr_model_path}")
-        sys.exit(1)
-    # sr = cv2.dnn_superres.DnnSuperResImpl_create()
-    # sr.readModel(edsr_model_path)
-    # sr.setModel("edsr", 2)
-
-    # Use 'cuda' if available, otherwise 'cpu'
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     logger.info(f"Using device: {device}")
 
