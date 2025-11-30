@@ -1,30 +1,23 @@
 
-import cv2
 
-from src.components.header import os, Path, Image, torch , MTCNN, InceptionResnetV1 
-from src.components.helper_function import increase_resolution
+from src.utils.header import os, Path, Image, torch , MTCNN, InceptionResnetV1 ,cv2
+from src.utils.helper_function import increase_resolution
 from src.DataBase.pymong import DB , Course_info , Class_Embeddings
+from src.utils.image_details import get_info_from_image
 import numpy as np
 mtcnn = MTCNN(image_size=224, margin=40)
 resnet = InceptionResnetV1(pretrained='vggface2' , classify=False).eval()
 
-
+# --- required if using the edsr--------
 # sr = cv2.dnn_superres.DnnSuperResImpl_create()
 # sr.readModel(EDSR_Model_path)
 # sr.setModel("edsr", 2)
  
-def get_info_from_image(image_path):
-    image_path = str(image_path)
-    filename = Path(image_path).name
-    values = filename.split(" ")
-    name = values[0]
-    img_id = str(np.random.randint(1000000))  # removes extension
-    
-    usn = name+img_id
-    img = Image.open(image_path).convert('RGB')
-    return img, name, usn, img_id
 
 
+
+
+# ......................................Extracting embeddings ............
 
 class ExtractEmbeddings:
     def __init__(self, image_folder_path, mtcnn, resnet, get_info_from_image):
@@ -41,7 +34,7 @@ class ExtractEmbeddings:
             w, h = Img.size
             if w < 100 or h < 100:
                Img =cv2.imread(str(i))
-               Img = increase_resolution(Img, sr)
+            #  Img = increase_resolution(Img, sr)
                Img = Image.fromarray(cv2.cvtColor(Img, cv2.COLOR_BGR2RGB))
             if Img is None:
                 continue
@@ -76,6 +69,7 @@ class ExtractEmbeddings:
     
 
 
+# ...............................Class embedding to Database .........................
 class Class_embeddings_to_Database:
     def __init__(self ,ExtractEmbeddings ,ClassName , Image_folder_path , Class_collection): 
         self.image_folder_path = Image_folder_path
@@ -93,6 +87,7 @@ class Class_embeddings_to_Database:
 
 
 
+# -----------------creating course with class embeddding exsists ------------------------------------ 
 
 class create_Course_Info:
     def __init__(self , Course_Name , Teacher_Name , Password , Class_Name  , Course_collection , class_collection ):
@@ -119,7 +114,7 @@ class create_Course_Info:
 
         
 
-# # storing class embeddings to database
+# # -----------storing images emebddings with course   to database --------------------------------
 # image_folder_path = Path("C:/Users/KADAK SINGH/OneDrive/Desktop/VTMA-1/Backend/images")
 # ClassName = "Semester 5 B"
 # Class_Embeddings.delete_many({})

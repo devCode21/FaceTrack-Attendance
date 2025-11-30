@@ -24,8 +24,8 @@ import cv2 as cv
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 from urllib.parse import quote_plus
-from src.components.helper_function import get_embeddings_from_database , detect_faces_from_frame 
-
+from src.utils.helper_function import get_embeddings_from_database , detect_faces_from_frame 
+logger =setup_logger()
 
 
 Yolo_Model_path = "uploads/yolov8n-face.pt"

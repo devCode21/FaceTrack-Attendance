@@ -5,7 +5,7 @@ sys.path.append(parent_dir)
 
 
 from src.utils.log import setup_logger
-from src.components.gettingresults import GettingResults
+from Backend.src.pipelines.gettingresults import GettingResults
 import torch
 
 

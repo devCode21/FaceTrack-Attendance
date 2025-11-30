@@ -1,12 +1,18 @@
 from PIL import Image
 from src.utils.log import setup_logger
 logger = setup_logger()
-from src.components.header import  ObjectId
- # For MongoDB queries
+from src.utils.header import  ObjectId
+ 
+
+
+
+# -------------------------get saved embeddings form the image -----------------------------------------
+
+
 def get_embeddings_from_database(course_id , Course_Collection, Embeddings_Collection  ):
     logger.info(f"Searching for course ID: {course_id}")
     try:
-        # --- CRITICAL FIX 2: Convert string ID to ObjectId for query ---
+   
         course = Course_Collection.find_one({'_id': ObjectId(course_id)})
     except Exception as e:
         logger.error(f"Invalid Course ID format: {course_id}. Error: {e}")
@@ -39,7 +45,8 @@ def get_embeddings_from_database(course_id , Course_Collection, Embeddings_Colle
     return Embeddings
 
 
-# get the frames from the video and detect faces using YOLO model
+# --------------------------------get the frames from the video and detect faces using YOLO model-------------------------------
+
 def detect_faces_from_frame(frame ,Yolo):
     model = Yolo
     results = model(frame, verbose=False) # verbose=False to silent YOLO logs
@@ -54,7 +61,7 @@ def detect_faces_from_frame(frame ,Yolo):
 
 
 
-# not used currently but can be useful for enhancing face images
+# ----------------------------------not used currently but can be useful for enhancing face images---------------------------------------
 def increase_resolution(face_image , sr):
     """Upscales a face image using the pre-loaded EDSR model."""
     # logger.debug("Upscaling face image...")
@@ -69,22 +76,23 @@ def increase_resolution(face_image , sr):
 
 
 
+# ---------------------------------------Retina face (not used ) --------------------------------------
 
 
-def retina_face_detect(frame):
-    if frame is None:
-        logger.error("Input frame is None")
-        return []
-    try:
-        detections = RetinaFace.detect_faces(frame)
-        faces = []
-        if isinstance(detections, dict):
-            for key in detections:
-                face_info = detections[key]
-                x1, y1, x2, y2 = map(int, face_info['facial_area'])
-                face_crop = frame[y1:y2, x1:x2]
-                faces.append(face_crop)
-        return faces
-    except Exception as e:
-        logger.error(f"RetinaFace detection failed: {e}")
-        return []
+# def retina_face_detect(frame):
+#     if frame is None:
+#         logger.error("Input frame is None")
+#         return []
+#     try:
+#         detections = RetinaFace.detect_faces(frame)
+#         faces = []
+#         if isinstance(detections, dict):
+#             for key in detections:
+#                 face_info = detections[key]
+#                 x1, y1, x2, y2 = map(int, face_info['facial_area'])
+#                 face_crop = frame[y1:y2, x1:x2]
+#                 faces.append(face_crop)
+#         return faces
+#     except Exception as e:
+#         logger.error(f"RetinaFace detection failed: {e}")
+#         return []

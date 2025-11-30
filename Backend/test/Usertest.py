@@ -6,7 +6,7 @@ parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(parent_dir)
 print(parent_dir)
 from src.DataBase.pymong import Class_Embeddings, Course_info
-from src.components.UserEmbedding import Class_embeddings_to_Database, ExtractEmbeddings, create_Course_Info
+from Backend.src.pipelines.UserEmbedding import Class_embeddings_to_Database, ExtractEmbeddings, create_Course_Info
 
 
 
