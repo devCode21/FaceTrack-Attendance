@@ -52,7 +52,7 @@ def compare_with_embeddings(features_tensor, class_embeddings, device):
             if usn not in usn_count:
                 usn_count[usn]=[0 ,0]
             usn_count[usn]=[usn_count[usn][0]+1 , usn_count[usn][1]+score]
-            if usn_count[usn][0]>=3 and (usn_count[usn][1]/usn_count[usn][0])>=0.5: 
+            if usn_count[usn][0]>=5 and (usn_count[usn][1]/usn_count[usn][0])>=0.5: 
                 logger.debug(f"Match found by majority voting: USN {usn} with score {score:.4f}")
                 return usn, score
            

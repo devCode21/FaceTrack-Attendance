@@ -65,15 +65,16 @@ def process_video(video_path, course_id, frame_count_device , device="cpu"):
                         logger.info(f"Found and marked student {usn} with confidence {score:.4f}")
 
                         if usn not in [list(d.keys())[0] for d in Marked_Students]:
-                             os.makedirs("results", exist_ok=True)
-                             cv2.imwrite(os.path.join("results", f"{usn}_{score}.jpg"), face)
-                             Marked_Students.append({usn: score})
+                            Marked_Students.append({usn: score})
+                            #  os.makedirs("results", exist_ok=True)
+                            #  cv2.imwrite(os.path.join("results", f"{usn}_{score}.jpg"), face)
+                            
                         else:
                             # updae score if higher
                             for entry in Marked_Students:
                                 if usn in entry and score > entry[usn]:
                                     entry[usn] = score
-                                    cv2.imwrite(os.path.join("results", f"{usn}_{score}.jpg"), face)
+                                    # cv2.imwrite(os.path.join("results", f"{usn}_{score}.jpg"), face)
 
                        
                 except Exception as e:
