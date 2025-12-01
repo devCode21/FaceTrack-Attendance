@@ -3,8 +3,8 @@ import { motion } from "framer-motion";
 import { BookOpen, User, Lock, ArrowRight, CornerDownRight, Check, X } from "lucide-react";
 import axios from "axios";
 import { useNavigate } from "react-router";
-import { Get_course_id_sigin_API } from './BackendApi.js'
-import { Login_data , add_course_info , add_form } from "./state.js";
+import { Get_course_id_sigin_API } from "../components/BackendApi.js";
+import { Login_data , add_course_info , add_form } from "../components/state.js";
 import { useDispatch , useSelector } from "react-redux";
 import {
   Card,
@@ -14,7 +14,7 @@ import {
   CardTitle,
   Button,
   LabeledInput
-} from "../components/card_componets";
+} from "../components/card_componets.jsx";
 
 
 // =============================
@@ -60,28 +60,6 @@ const useToast = () => {
     }
   };
 };
-
-
-// =============================
-// CSS (Add to index.css)
-// =============================
-/*
-
-@keyframes toastIn {
-  from { opacity: 0; transform: translateY(-10px) scale(0.95); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-@keyframes toastOut {
-  from { opacity: 1; transform: translateY(0) scale(1); }
-  to   { opacity: 0; transform: translateY(-10px) scale(0.95); }
-}
-
-.animate-toast-in { animation: toastIn 0.25s ease-out forwards; }
-.animate-toast-out { animation: toastOut 0.25s ease-in forwards; }
-
-*/
-
 
 // =============================
 // MAIN COMPONENT

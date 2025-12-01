@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import * as Icons from "lucide-react";
 import axios from "axios";
 import { useSelector } from "react-redux";
-import { get_attendance_from_video, get_attendance_from_image } from "./BackendApi.js";
+import { get_attendance_from_video, get_attendance_from_image } from "../components/BackendApi";
 
 export default function CreativeAttendancePage() {
   const { CourseID, formdata } = useSelector((state) => state.Data);
