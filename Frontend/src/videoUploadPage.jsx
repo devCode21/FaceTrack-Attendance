@@ -6,8 +6,8 @@ import { useSelector } from "react-redux";
 import { get_attendance_from_video, get_attendance_from_image } from "../components/BackendApi";
 
 export default function CreativeAttendancePage() {
-  const { CourseID, formdata } = useSelector((state) => state.Data);
-
+  const { CourseID, formdata , students } = useSelector((state) => state.Data);
+  console.log(students)
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState(null);

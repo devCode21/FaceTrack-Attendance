@@ -26,8 +26,6 @@ from pymongo.server_api import ServerApi
 from urllib.parse import quote_plus
 from src.utils.helper_function import get_embeddings_from_database , detect_faces_from_frame 
 logger =setup_logger()
-
-
-Yolo_Model_path = "uploads/yolov8n-face.pt"
+Yolo_Model_path = r"C:\Users\KADAK SINGH\OneDrive\Desktop\VTMA-1\Backend\uploads\yolov8n-face.pt"
 
    

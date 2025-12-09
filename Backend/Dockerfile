@@ -6,7 +6,14 @@ WORKDIR /Backend
 RUN apt-get update && apt-get install -y \
     libgl1 \
     libglib2.0-0 \
+    libopenblas-dev \
+    liblapack-dev \
+    libtbb2 \
+    libtbb-dev \
+    libavutil-dev \
+    libswscale-dev \
     && rm -rf /var/lib/apt/lists/*
+
 
 COPY requirement.txt .
 

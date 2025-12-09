@@ -1,10 +1,19 @@
-import React from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import * as Icons from "lucide-react";
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import { FeatureCard, fadeUp } from "../components/card_componets";
 
-export default function Home() {
+export default function Home({ Login }) {
+  const navigate = useNavigate();
+  const [loggedIn, setLoggedIn] = useState(Login);
+
+const handleLogout = () => {
+  localStorage.removeItem("state");
+  setLoggedIn(false);
+  navigate("/");
+};
+
   const features = [
     { icon: Icons.Camera, title: "YOLO Face Detection", description: "Real-time classroom detection with low latency." },
     { icon: Icons.Fingerprint, title: "ResNet Recognition", description: "Robust embeddings for identity matching." },
@@ -21,6 +30,7 @@ export default function Home() {
       transition={{ duration: 0.7, ease: "easeOut" }}
       className="min-h-screen bg-black text-neutral-200 font-sans relative overflow-hidden"
     >
+
       {/* Background Glow */}
       <div className="absolute -left-10 -top-10 w-80 h-80 bg-sky-600/20 blur-3xl rounded-full pointer-events-none" />
       <div className="absolute -right-20 -bottom-20 w-96 h-96 bg-purple-600/20 blur-3xl rounded-full pointer-events-none" />
@@ -28,7 +38,7 @@ export default function Home() {
       {/* NAVBAR */}
       <header className="fixed top-0 w-full bg-black/40 backdrop-blur-xl border-b border-zinc-800 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
-          
+
           {/* Logo */}
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-zinc-700 to-black border border-zinc-600 flex items-center justify-center font-bold text-white shadow-lg">
@@ -42,40 +52,66 @@ export default function Home() {
 
           {/* Desktop Nav */}
           <nav className="hidden sm:flex items-center gap-4">
-            <NavLink
-              to="/student"
-              className={({ isActive }) =>
-                `px-4 py-2 rounded-lg border text-sm transition ${
-                  isActive
-                    ? "bg-zinc-800 text-white border-zinc-700"
-                    : "bg-zinc-900/40 text-neutral-300 border-zinc-700 hover:bg-zinc-800"
-                }`
-              }
-            >
-              Student Panel
-            </NavLink>
 
-            <NavLink
-              to="/teacher-login"
-              className={({ isActive }) =>
-                `px-5 py-2 rounded-lg text-sm font-medium transition shadow-md ${
-                  isActive
-                    ? "bg-sky-600 text-white"
-                    : "bg-sky-600/90 hover:bg-sky-700 text-white"
-                }`
-              }
-            >
-              Teacher Login
-            </NavLink>
+            {!Login && (
+              <>
+                <NavLink
+                  to="/student"
+                  className={({ isActive }) =>
+                    `px-4 py-2 rounded-lg border text-sm transition ${
+                      isActive
+                        ? "bg-zinc-800 text-white border-zinc-700"
+                        : "bg-zinc-900/40 text-neutral-300 border-zinc-700 hover:bg-zinc-800"
+                    }`
+                  }
+                >
+                  Student Panel
+                </NavLink>
+
+                <NavLink
+                  to="/teacher-login"
+                  className={({ isActive }) =>
+                    `px-5 py-2 rounded-lg text-sm font-medium transition shadow-md ${
+                      isActive
+                        ? "bg-sky-600 text-white"
+                        : "bg-sky-600/90 hover:bg-sky-700 text-white"
+                    }`
+                  }
+                >
+                  Teacher Login
+                </NavLink>
+              </>
+            )}
+
+            {/* Logout Button */}
+            {loggedIn && (
+              <button
+                onClick={handleLogout}
+                className="px-5 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-medium shadow-md transition"
+              >
+                Logout
+              </button>
+            )}
+
           </nav>
 
           {/* Mobile Button */}
-          <NavLink
-            to="/teacher-login"
-            className="sm:hidden px-4 py-1.5 rounded-lg bg-sky-600 text-white text-xs font-medium"
-          >
-            Login
-          </NavLink>
+          {!Login ? (
+            <NavLink
+              to="/teacher-login"
+              className="sm:hidden px-4 py-1.5 rounded-lg bg-sky-600 text-white text-xs font-medium"
+            >
+              Login
+            </NavLink>
+          ) : (
+            <button
+              onClick={handleLogout}
+              className="sm:hidden px-4 py-1.5 rounded-lg bg-red-600 text-white text-xs font-medium"
+            >
+              Logout
+            </button>
+          )}
+
         </div>
       </header>
 
@@ -102,7 +138,7 @@ export default function Home() {
             variants={fadeUp}
             className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-white leading-tight"
           >
-            AI-Powered <span className="text-sky-400">Attendance</span> 
+            AI-Powered <span className="text-sky-400">Attendance</span>
             <br className="hidden sm:block" />
             for Modern Classrooms
           </motion.h1>
@@ -116,26 +152,38 @@ export default function Home() {
             Accurate. Automated. Reliable even in real-world conditions.
           </motion.p>
 
-          {/* CTAs */}
+          {/* CTA Buttons */}
           <motion.div variants={fadeUp} className="mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4">
 
-            {/* Teacher Login */}
-            <Link
-              to="/teacher-login"
-              className="px-6 py-3 rounded-xl bg-sky-600 text-white text-lg font-semibold shadow-lg 
-                         hover:bg-sky-700 hover:-translate-y-1 active:scale-95 transition inline-flex 
-                         items-center gap-2 justify-center"
-            >
-              <Icons.LogIn className="w-5 h-5" />
-              Login as Teacher
-            </Link>
+            {!Login && (
+              <Link
+                to="/teacher-login"
+                className="px-6 py-3 rounded-xl bg-sky-600 text-white text-lg font-semibold shadow-lg 
+                           hover:bg-sky-700 hover:-translate-y-1 active:scale-95 transition inline-flex 
+                           items-center gap-2 justify-center"
+              >
+                <Icons.LogIn className="w-5 h-5" />
+                Login as Teacher
+              </Link>
+            )}
 
-            {/* Learn More → GitHub README */}
+            {Login && (
+              <button
+                onClick={() => navigate("/dashboard")}
+                className="px-6 py-3 rounded-xl bg-green-600 text-white text-lg font-semibold 
+                           hover:bg-green-700 hover:-translate-y-1 active:scale-95 transition 
+                           inline-flex items-center gap-2 justify-center"
+              >
+                <Icons.LayoutDashboard className="w-5 h-5" />
+                Go to Dashboard
+              </button>
+            )}
+
             <a
               href="#"
               target="_blank"
               rel="noopener noreferrer"
-              className="px-6 py-3 rounded-xl bg-green-500/20 border border-green-500/40 text-white 
+              className="px-6 py-3-rounded-xl bg-green-500/20 border border-green-500/40 text-white 
                          text-lg font-semibold hover:bg-green-600/30 hover:-translate-y-1 active:scale-95 
                          transition inline-flex items-center gap-2 justify-center"
             >
@@ -145,19 +193,6 @@ export default function Home() {
 
           </motion.div>
         </motion.section>
-
-        {/* HIGHLIGHTS */}
-        <div className="mt-10 flex flex-col sm:flex-row flex-wrap gap-4 sm:gap-6 text-neutral-400 text-sm">
-          <div className="flex items-center gap-2">
-            <Icons.Cpu className="w-4 h-4 text-sky-400" /> YOLO + MTCNN + ResNet
-          </div>
-          <div className="flex items-center gap-2">
-            <Icons.CheckCircle className="w-4 h-4 text-green-500" /> Automated Attendance
-          </div>
-          <div className="flex items-center gap-2">
-            <Icons.Download className="w-4 h-4 text-purple-400" /> CSV Export Support
-          </div>
-        </div>
 
         {/* FEATURES GRID */}
         <section className="mt-16">
@@ -197,7 +232,6 @@ export default function Home() {
         {/* FINAL CTA */}
         <section className="mt-20 bg-zinc-900/60 backdrop-blur-xl border border-zinc-800 rounded-3xl p-10 shadow-xl shadow-black/40 relative overflow-hidden">
 
-          {/* Glow Inside Box */}
           <div className="absolute inset-0 bg-gradient-to-br from-sky-600/10 to-purple-600/10 opacity-20 pointer-events-none" />
 
           <div className="relative flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">

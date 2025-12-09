@@ -51,13 +51,15 @@ def detect_faces_from_frame(frame ,Yolo):
     model = Yolo
     results = model(frame, verbose=False) # verbose=False to silent YOLO logs
     faces = []
+    coordinates = []
 
     for result in results:
         for box in result.boxes:
             x1, y1, x2, y2 = map(int, box.xyxy[0])
             face_crop = frame[y1:y2, x1:x2]
             faces.append(Image.fromarray(face_crop))
-    return faces
+            coordinates.append((x1, y1, x2, y2))
+    return faces , coordinates    # Return list of PIL Images and coordinates
 
 
 

@@ -3,6 +3,7 @@
 from src.app_utils.fast_api_header import Course_info, Class_Embeddings
 from src.app_utils.pydanatic_schemas import Course,LoginDetails
 from src.app_utils.Api_resposne import ErrorResponse ,API_respone
+from src.utils.header import ObjectId
 
 
 # ---------- create the course and signup the user  --------------------------
@@ -16,15 +17,18 @@ def create_new_course(course: Course):
     course_name_details = Course_info.find_one({'course_name': course_name , 'teacher_name': Course_content['teacher_name'], 'class_name': Course_content['class_name']})
     if course_name_details:
         return ErrorResponse(400 , "Course Name already exist  " ).send()
+    student_name=[]
     class_embeddings_id = Class_Embeddings.find_one({'class_name': Course_content['class_name']})
     if not class_embeddings_id:
         return ErrorResponse(400 , "wrong class name  " ).send()
     else:
+        student_name =list(class_embeddings_id['embeddings'].keys())
         class_embeddings_id = class_embeddings_id['_id']
+        
     Course_content['class_name'] = class_embeddings_id
     Course=Course_info.insert_one(Course_content)
 
-    return API_respone(200 , "Create succesfully " ,{'Course_id': str(Course.inserted_id), 'Class_Embeddings_id': str(class_embeddings_id)}  ).api_respone()
+    return API_respone(200 , "Create succesfully " ,{'Course_id': str(Course.inserted_id), 'Class_Embeddings_id': str(class_embeddings_id) ,"student_Name": student_name}  ).api_respone()
 
 
 
@@ -38,5 +42,8 @@ def login_existing_course(course: LoginDetails):
     course_details = Course_info.find_one({'course_name': course_name, 'teacher_name': teacher_name, 'password': password})
     if not course_details:
         return {'status': 'failed', 'message': 'Invalid credentials'}
-    return {'status': 'success', 'message': 'Login successful', 'data': {'Course_id': str(course_details['_id']), 'Class_Embeddings_id': str(course_details['class_name'])}}
+    
+    class_data= Class_Embeddings.find_one({"_id" : ObjectId(course_details['class_name'])})
+    student_name= list(class_data['embeddings'].keys())
+    return {'status': 'success', 'message': 'Login successful', 'data': {'Course_id': str(course_details['_id']), 'Class_Embeddings_id': str(course_details['class_name']) , "student_name":student_name}}
 

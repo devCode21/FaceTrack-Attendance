@@ -13,7 +13,7 @@ class GettingResults:
 
     def get_results(self):
         try:
-            results = process_video(self.video_path, self.course_id, 30 ,self.device)
+            results = process_video(self.video_path, self.course_id, 1 ,self.device)
             return results
         except Exception as e:
             logger.error(f"Critical error in GettingResults.get_results: {str(e)}", exc_info=True)

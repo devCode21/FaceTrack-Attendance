@@ -1,27 +1,21 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { BookOpen, User, Lock, ArrowRight, CornerDownRight, Check, X } from "lucide-react";
+import { BookOpen, User, Lock, ArrowRight } from "lucide-react";
 import axios from "axios";
 import { useNavigate } from "react-router";
-import { Get_course_id_sigin_API } from "../components/BackendApi.js";
-import { Login_data , add_course_info , add_form, add_student_name ,store_data } from "../components/state.js";
-import { useDispatch , useSelector } from "react-redux";
-
+import { Get_course_id_Login_API } from "../components/BackendApi.js";
+import { Login_data, add_course_info, add_form } from "../components/state.js";
+import { useDispatch } from "react-redux";
 import {
-
   Card,
   CardContent,
   CardHeader,
   CardDescription,
   CardTitle,
   Button,
-  LabeledInput
+  LabeledInput,
 } from "../components/card_componets.jsx";
 
-
-// =============================
-// BEST TOAST SYSTEM (GLOBAL)
-// =============================
 const useToast = () => {
   return {
     toast: ({ title, description, status }) => {
@@ -41,7 +35,7 @@ const useToast = () => {
 
       const el = document.createElement("div");
       el.className = `
-        fixed top-6 right-6 px-4 py-3 rounded-xl text-white shadow-2xl 
+        fixed top-6 right-6 px-4 py-3 rounded-xl text-white shadow-2xl
         flex items-start gap-3 animate-toast-in ${color} z-[9999]
       `;
 
@@ -59,21 +53,16 @@ const useToast = () => {
         el.classList.add("animate-toast-out");
         setTimeout(() => el.remove(), 300);
       }, 2500);
-    }
+    },
   };
 };
 
-// =============================
-// MAIN COMPONENT
-// =============================
-export default function CourseEntryForm() {
-  const dispatch =useDispatch()
-  
+export default function CourseLoginForm() {
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const [form, setForm] = useState({
-    class: "",
     course_name: "",
     teacher_name: "",
     password: "",
@@ -89,10 +78,12 @@ export default function CourseEntryForm() {
 
   const validate = () => {
     let newErrors = {};
-    if (!form.class.trim()) newErrors.class = "Class is required.";
+
     if (!form.course_name.trim()) newErrors.course_name = "Course Name is required.";
     if (!form.teacher_name.trim()) newErrors.teacher_name = "Teacher Name is required.";
     if (form.password.length < 4) newErrors.password = "Minimum 4 characters required.";
+    if (form.password !== form.confirm_password)
+      newErrors.confirm_password = "Passwords do not match.";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -107,14 +98,11 @@ export default function CourseEntryForm() {
     const payload = {
       course_name: form.course_name,
       teacher_name: form.teacher_name,
-      class_name: form.class,
       password: form.password,
     };
 
     try {
-      console.log(Get_course_id_sigin_API , payload)
-      const respone =await axios.post(Get_course_id_sigin_API, payload);
-      console.log(respone.data)
+      const response = await axios.post(Get_course_id_Login_API, payload);
 
       toast({
         title: "Verification Successful",
@@ -123,87 +111,53 @@ export default function CourseEntryForm() {
       });
 
       dispatch(Login_data());
-      dispatch(add_form({"formdata":payload}))
-      dispatch(add_course_info({"CourseID":respone.data.data.Course_id }))
-      dispatch(add_student_name({"student_name":respone.data.data.student_Name}))
-      dispatch(store_data())
+      dispatch(add_form({ formdata: payload }));
+      dispatch(add_course_info({ CourseID: response.data.data.Course_id }));
+
       setLoading(false);
       navigate("/dashboard");
-
     } catch (err) {
-      console.log(err)
       toast({
         title: "Verification Failed",
-        description: err.response.data.message,
+        description: err?.response?.data?.message || "Something went wrong.",
         status: "error",
       });
-
       setLoading(false);
     }
   };
 
-  const cardVariants = {
-    hidden: { opacity: 0, y: 50, scale: 0.95 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      scale: 1,
-      transition: { duration: 0.6, ease: "easeOut" },
-    },
-  };
-
   return (
-    <div
-      className="
-      min-h-screen flex flex-col items-center justify-center 
-      bg-gradient-to-br from-gray-900 via-black to-gray-900 
-      p-4 sm:p-6 relative overflow-hidden
-    "
-    >
-      {/* Background Glow */}
-      <div className="absolute top-10 left-10 w-52 h-52 sm:w-60 sm:h-60 bg-blue-500/20 blur-[80px] rounded-full" />
-      <div className="absolute bottom-10 right-10 w-60 h-60 sm:w-72 sm:h-72 bg-purple-500/20 blur-[80px] rounded-full" />
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-900 via-black to-gray-900 p-4 sm:p-6 relative overflow-hidden">
+
+      <div className="absolute top-16 left-16 w-64 h-64 bg-blue-500/20 blur-[110px] rounded-full" />
+      <div className="absolute bottom-16 right-16 w-64 h-64 bg-purple-500/20 blur-[110px] rounded-full" />
 
       <motion.div
-        variants={cardVariants}
-        initial="hidden"
-        animate="visible"
+        initial={{ opacity: 0, y: 60, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.7, ease: "easeOut" }}
         className="w-full max-w-md px-2"
       >
-        <Card className="shadow-2xl border border-gray-700 bg-black/40 backdrop-blur-xl rounded-2xl">
+        <Card className="shadow-2xl border border-gray-700/60 bg-black/40 backdrop-blur-xl rounded-2xl hover:bg-black/50 transition-all duration-300">
           <CardHeader className="space-y-2 text-center">
 
-            {/* Tag */}
-            <div
-              className="
-              mx-auto mb-2 inline-flex items-center gap-2 px-3 py-1 rounded-full
-              bg-gray-800 border border-gray-700 text-gray-300 text-xs uppercase tracking-widest
-            "
-            >
+            <div className="mx-auto mb-2 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gray-800/60 border border-gray-700 text-gray-300 text-xs uppercase tracking-widest">
               <span className="h-2 w-2 bg-blue-400 rounded-full" />
               Secure Access
             </div>
 
-            <CardTitle className="text-2xl font-semibold text-white">
+            <CardTitle className="text-2xl font-bold text-white tracking-wide">
               Course Enrollment
             </CardTitle>
-            <CardDescription className="text-gray-400 text-sm">
-              Enter your course details to begin automated attendance
+
+            <CardDescription className="text-gray-400 text-sm tracking-wide">
+              Enter your details to continue
             </CardDescription>
           </CardHeader>
 
           <CardContent className="px-4 sm:px-6">
-            <form onSubmit={handleSubmit} className="space-y-5">
 
-              <LabeledInput
-                Icon={CornerDownRight}
-                label="Class"
-                id="class"
-                placeholder="e.g., CSE-301"
-                value={form.class}
-                onChange={handleChange}
-                error={errors.class}
-              />
+            <form onSubmit={handleSubmit} className="space-y-5">
 
               <LabeledInput
                 Icon={BookOpen}
@@ -236,14 +190,31 @@ export default function CourseEntryForm() {
                 error={errors.password}
               />
 
-              <p className="text-gray-500 text-xs text-center -mt-2">
-                Your details are encrypted & secure
-              </p>
+              <LabeledInput
+                Icon={Lock}
+                label="Confirm Password"
+                id="confirm_password"
+                type="password"
+                placeholder="Re-enter password"
+                value={form.confirm_password}
+                onChange={handleChange}
+                error={errors.confirm_password}
+              />
+
+              <div className="pt-1 w-full flex justify-start pl-1">
+                <button
+                  type="button"
+                  onClick={() => navigate("/teacher-signup")}
+                  className="text-xs text-gray-400 hover:text-gray-200 underline underline-offset-2 transition"
+                >
+                  Don’t have an account? Sign up
+                </button>
+              </div>
 
               <Button
                 type="submit"
                 disabled={loading}
-                className="w-full flex items-center justify-center gap-2 mt-4"
+                className="w-full flex items-center justify-center gap-2 mt-3 rounded-xl bg-blue-600 hover:bg-blue-700 transition-all"
               >
                 {loading ? (
                   <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
@@ -252,6 +223,7 @@ export default function CourseEntryForm() {
                 )}
                 {loading ? "Verifying..." : "Verify & Continue"}
               </Button>
+
             </form>
           </CardContent>
         </Card>
