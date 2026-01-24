@@ -1,4 +1,4 @@
-# FaceAttendance Backend
+# Class Track  Backend
 
 
 # 📌 Overview
@@ -239,13 +239,15 @@ uvicorn app:app --reload
 
 # 🐳 Docker Setup
 
-Coming soon (not implemented yet).
+Dockerized and pushed into Docker hub 
+link  -->  docker push kadak21/faceattendance.1.1:latest  ( to pull in your system  )
 
 ---
 
 # ☁️ AWS Deployment
 
-Coming soon (planned for EC2 + Docker).
+Deployed both frontend and backend in Aws ec2 instance 
+https://bit.ly/FaceAttendancTracker (currently it shut down )
 
 ---
 
