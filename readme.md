@@ -1,8 +1,4 @@
-Good, simple change.
-Here is your **same README updated with the new project name: *ClassTrack*** 👇
-Just paste it and replace the GitHub username.
 
----
 
 # ClassTrack
 
