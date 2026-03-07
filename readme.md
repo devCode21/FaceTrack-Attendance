@@ -11,7 +11,7 @@ The frontend is developed using React.js and Tailwind CSS to provide a clean and
 Overall, ClassTrack is built as a system-level prototype intended for academic, learning, and portfolio purposes. It showcases the practical application of machine learning in a full-stack environment and emphasizes clean architecture, modular design, and real-world constraints such as low-compute deployment and privacy considerations, while clearly separating the concerns of the backend and frontend components.
 
 ### 📁 Project Modules
-
+👉 **Frontend Documentation:** https://github.com/KadakSingh19/Class-Track/blob/main/Frontend/README.md
 👉 **Backend Documentation:** [(https://github.com/devCode21/FaceTrack-Attendance/blob/main/Backend/readme.md)]
 
 
